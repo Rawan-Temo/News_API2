@@ -26,8 +26,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      required: true, // Assuming phone is a required field
       enum: ["admin", "user"], // Assuming phone is a required field
+      default:"user"
     },
     isVerified: {
       type: Boolean,
