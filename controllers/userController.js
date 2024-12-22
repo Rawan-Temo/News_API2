@@ -1,7 +1,6 @@
 const User = require("../models/user"); // Assuming the User model is in 'models/user.js'
 const bcrypt = require("bcrypt"); // For password hashing and validation
 const jwt = require("jsonwebtoken"); // For creating JWT tokens
-const crypto = require("crypto");
 const UserVerification = require("../models/userVerification");
 const nodemailer = require("nodemailer");
 // Controller for user login
@@ -277,7 +276,81 @@ const sendEmail = async (req, res) => {
       from: process.env.EMAIL_USER,
       to: userEmail,
       subject: "Your Verification Code",
-      text: `Hello,\n\nYour verification code is: ${verificationCode}.\n\nIt will expire in 1 hour.\n\nThank you!`,
+      html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              background-color: #f4f4f9;
+              margin: 0;
+              padding: 0;
+              color: #333;
+            }
+            .email-container {
+              max-width: 600px;
+              margin: 20px auto;
+              background: #ffffff;
+              padding: 20px;
+              border: 1px solid #ddd;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+              text-align: center;
+              padding: 10px 0;
+              border-bottom: 1px solid #ddd;
+            }
+            .header h1 {
+              color: #007bff;
+              font-size: 24px;
+            }
+            .content {
+              padding: 20px;
+              line-height: 1.6;
+            }
+            .content p {
+              margin: 0 0 10px;
+            }
+            .code {
+              display: inline-block;
+              font-size: 18px;
+              font-weight: bold;
+              color: #007bff;
+              background: #f9f9f9;
+              padding: 10px 20px;
+              border-radius: 4px;
+              margin: 10px 0;
+              text-align: center;
+            }
+            .footer {
+              text-align: center;
+              font-size: 12px;
+              color: #777;
+              margin-top: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="email-container">
+            <div class="header">
+              <h1>Verification Code</h1>
+            </div>
+            <div class="content">
+              <p>Hello,</p>
+              <p>Your verification code is:</p>
+              <div class="code">${verificationCode}</div>
+              <p>If you did not request this, please ignore this email.</p>
+              <p>Thank you!</p>
+            </div>
+            <div class="footer">
+              &copy; ${new Date().getFullYear()} Your Company. All rights reserved.
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
     };
 
     // Send the email

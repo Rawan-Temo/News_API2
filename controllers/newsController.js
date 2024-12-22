@@ -99,9 +99,6 @@ const updateNews = async (req, res) => {
       ? req.files.photos.map((file) => `/images/${file.filename}`) // Use file.filename instead of file.path
       : [];
 
-
-
-      
     const videoPath = req.files.video
       ? `/videos/${req.files.video[0].filename}`
       : existingNews.video;
@@ -210,6 +207,50 @@ const uploadFiles = upload.fields([
   { name: "photos", maxCount: 3 }, // Allow up to 3 photos
   { name: "video", maxCount: 1 }, // Allow 1 video
 ]);
+// SEARCH HANDLER
+const search = async (req, res) => {
+  try {
+    const query = req.body.search; // The search term from the client
+
+    // Ensure the search query is provided
+    if (!query) {
+      return res.status(400).json({
+        status: "error",
+        message: "Search query is required",
+      });
+    }
+
+    console.log("Search Query:", query);
+
+    // Perform fuzzy search using mongoose-fuzzy-searching plugin
+    const features = new APIFeatures(News.fuzzySearch(query), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const featurersCount = new APIFeatures(
+      News.fuzzySearch(query),
+      req.query
+    ).filter();
+
+    let [results, numberOfActiveNews] = await Promise.all([
+      features.query,
+      featurersCount.query.countDocuments(),
+    ]);
+
+    return res.status(200).json({
+      status: "success",
+      numberOfActiveNews, // Total number of results found
+      data: results, // The matching documents
+    });
+  } catch (err) {
+    console.error("Error during search:", err); // Log error for debugging
+    return res.status(500).json({
+      status: "error",
+      message: err.message || "Something went wrong during the search",
+    });
+  }
+};
 module.exports = {
   getAllNews,
   createNews,
@@ -217,4 +258,5 @@ module.exports = {
   getNewsById,
   updateNews,
   deactivateNews,
+  search,
 };

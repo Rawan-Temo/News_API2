@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongooseFuzzySearching = require("mongoose-fuzzy-searching");
 
 // News Schema
 
@@ -50,5 +51,7 @@ const newsSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+newsSchema.plugin(mongooseFuzzySearching, { fields: ["title", "description"] });
+
 const News = mongoose.model("News", newsSchema);
 module.exports = News;

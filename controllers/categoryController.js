@@ -35,7 +35,6 @@ const getAllCategories = async (req, res) => {
   }
 };
 
-
 // Create a new category
 const createCategory = async (req, res) => {
   try {
@@ -47,7 +46,6 @@ const createCategory = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-
 
 // Get a category by ID
 const getCategoryById = async (req, res) => {

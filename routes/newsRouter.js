@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const newsController = require("../controllers/newsController");
+// SEARCH
+router.route("/search").get(newsController.search);
+
 // Route for fetching all categories and creating a new one
 router
   .route("/")
