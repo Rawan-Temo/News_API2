@@ -3,8 +3,12 @@ const APIFeatures = require("../utils/apiFeatures");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const Image = require("../models/image");
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
 // Get all news
-
 const getAllNews = async (req, res) => {
   try {
     // Create a filtered query object for counting active news entries
@@ -30,34 +34,46 @@ const getAllNews = async (req, res) => {
       features.query, // Get paginated news results
       News.countDocuments(parsedQuery), // Count total matching documents
     ]);
+    // Fetch images for each news item
+    const newsWithImages = await Promise.all(
+      newsList.map(async (newsItem) => {
+        // Fetch images related to the current news item by newsId
+        const images = await Image.find({ newsId: newsItem._id });
 
+        // Add images to the news item
+        return {
+          ...newsItem.toObject(),
+          images: images.map((image) => image.src), // Include only the src field for simplicity
+        };
+      })
+    );
     res.status(200).json({
       status: "success",
-      results: newsList.length, // Number of results in this response
+      results: newsWithImages.length, // Number of results in this response
       totalNewsCount, // Total count of matching documents
-      data: newsList, // The news data
+      data: newsWithImages, // The news data
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 };
 
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
 // Create a new news entry
 
 const createNews = async (req, res) => {
   try {
     // Extract the file paths from the request (assuming they are available in req.files)
-    const photoPaths = req.files.photos
-      ? req.files.photos.map((file) => `/images/${file.filename}`) // Use file.filename instead of file.path
-      : [];
-    const videoPath = req.files.video
-      ? `/videos/${req.files.video[0].filename}`
-      : null;
+
+    console.log(req.file);
+    const videoPath = req.file ? `/videos/${req.file.filename}` : null;
 
     // Create a new news entry, including file paths
     const newNews = await News.create({
       ...req.body,
-      photos: photoPaths, // Array of photo file paths
       video: videoPath, // Single video file path
     });
 
@@ -72,6 +88,10 @@ const createNews = async (req, res) => {
   }
 };
 
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
 // Get a specific news entry by ID
 
 const getNewsById = async (req, res) => {
@@ -89,15 +109,16 @@ const getNewsById = async (req, res) => {
   }
 };
 
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
 // Update a specific news entry by ID
 
 const updateNews = async (req, res) => {
   try {
     const { id } = req.params;
     const existingNews = await News.findById(id);
-    const photoPaths = req.files.photos
-      ? req.files.photos.map((file) => `/images/${file.filename}`) // Use file.filename instead of file.path
-      : [];
 
     const videoPath = req.files.video
       ? `/videos/${req.files.video[0].filename}`
@@ -131,6 +152,10 @@ const updateNews = async (req, res) => {
   }
 };
 
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
 // Deactivate a news entry (soft delete)
 const deactivateNews = async (req, res) => {
   try {
@@ -156,33 +181,14 @@ const deactivateNews = async (req, res) => {
 };
 
 // Configure Multer storage
-// Configure Multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    if (file.fieldname === "photos") {
-      cb(null, "public/images"); // Directory for images
-    } else if (file.fieldname === "video") {
-      cb(null, "public/videos"); // Directory for videos
-    } else {
-      cb(null, "uploads");
-    }
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname); // Get the file extension
-    const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`; // Ensure uniqueness
-    cb(null, fileName); // Set the file name as a combination of timestamp and random number
-  },
-});
 
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
 // File filter for validation
 const fileFilter = (req, file, cb) => {
-  if (file.fieldname === "photos") {
-    if (file.mimetype.startsWith("image/")) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only image files are allowed for photos!"), false);
-    }
-  } else if (file.fieldname === "video") {
+  if (file.fieldname === "video") {
     if (file.mimetype.startsWith("video/")) {
       cb(null, true);
     } else {
@@ -193,20 +199,33 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+// Multer storage configuration (optional: customize destination/filename)
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/videos"); // Set the upload directory
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  },
+});
+
 // Multer configuration
 const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 40 * 1024 * 1024, // 40MB max for images and videos
+    fileSize: 40 * 1024 * 1024, // 40MB max for videos
   },
 });
 
-// Middleware for handling file uploads
-const uploadFiles = upload.fields([
-  { name: "photos", maxCount: 3 }, // Allow up to 3 photos
-  { name: "video", maxCount: 1 }, // Allow 1 video
-]);
+// Middleware for handling video uploads
+const uploadVideo = upload.single("video"); // Allow only one video file
+
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+//----------------------------------------------------------------
 // SEARCH HANDLER
 const search = async (req, res) => {
   try {
@@ -251,10 +270,14 @@ const search = async (req, res) => {
     });
   }
 };
+
+//----------------------------------------------------------------
+//----------------------------------------------------------------
+
 module.exports = {
   getAllNews,
   createNews,
-  uploadFiles,
+  uploadVideo,
   getNewsById,
   updateNews,
   deactivateNews,

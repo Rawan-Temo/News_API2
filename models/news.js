@@ -33,9 +33,7 @@ const newsSchema = new mongoose.Schema(
       type: String, // List of strings
       required: true,
     },
-    photos: {
-      type: [String], // List of image URLs
-    },
+
     video: {
       type: String, // List of video URLs
     },
@@ -52,6 +50,6 @@ const newsSchema = new mongoose.Schema(
   }
 );
 newsSchema.plugin(mongooseFuzzySearching, { fields: ["title", "description"] });
-
+newsSchema.index({ category: 1, active: 1 });
 const News = mongoose.model("News", newsSchema);
 module.exports = News;
