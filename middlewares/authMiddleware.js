@@ -8,7 +8,6 @@ const authenticateToken = async (req, res, next) => {
 
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
     if (err) return res.sendStatus(403); // Invalid token
-    console.log(user);
 
     const foundUser = await User.findById(user.userId);
     if (!foundUser) return res.sendStatus(404); // User not found
@@ -25,7 +24,7 @@ const isAdmin = async (req, res, next) => {
   res.status(403).json({ message: "Access denied." });
 };
 const isUser = async (req, res, next) => {
-  if (req.user && req.user.role === "user") {
+  if (req.user && (req.user.role === "user" || req.user.role === "admin")) {
     return next();
   }
   res.status(403).json({ message: "Access denied." });
