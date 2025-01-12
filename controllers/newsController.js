@@ -67,7 +67,6 @@ const getAllNews = async (req, res) => {
 const createNews = async (req, res) => {
   try {
     // Extract the file paths from the request (assuming they are available in req.files)
-    console.log(req.file);
     const videoPath = req.file ? `/videos/${req.file.filename}` : null;
 
     // Create a new news entry, including file paths
@@ -118,11 +117,9 @@ const updateNews = async (req, res) => {
   try {
     const { id } = req.params;
     const existingNews = await News.findById(id);
-    console.log(req.video);
     const videoPath = req.file
       ? `/videos/${req.file.filename}`
       : existingNews.video;
-    console.log(req.files);
 
     if (existingNews.video && req.file) {
       const oldVideoPath = path.join(
@@ -130,7 +127,6 @@ const updateNews = async (req, res) => {
         "../public",
         existingNews.video
       ); // Absolute path to the old video
-      console.log(oldVideoPath);
       if (fs.existsSync(oldVideoPath)) {
         fs.unlinkSync(oldVideoPath); // Delete old video file
       }
@@ -252,8 +248,6 @@ const search = async (req, res) => {
         message: "Search query is required",
       });
     }
-
-    console.log("Search Query:", query);
 
     // Perform fuzzy search using mongoose-fuzzy-searching plugin
     const features = new APIFeatures(News.fuzzySearch(query), req.query)
