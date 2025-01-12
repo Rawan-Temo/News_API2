@@ -67,7 +67,6 @@ const getAllNews = async (req, res) => {
 const createNews = async (req, res) => {
   try {
     // Extract the file paths from the request (assuming they are available in req.files)
-
     console.log(req.file);
     const videoPath = req.file ? `/videos/${req.file.filename}` : null;
 
@@ -119,12 +118,13 @@ const updateNews = async (req, res) => {
   try {
     const { id } = req.params;
     const existingNews = await News.findById(id);
-
-    const videoPath = req.files.video
-      ? `/videos/${req.files.video[0].filename}`
+    console.log(req.video);
+    const videoPath = req.file
+      ? `/videos/${req.file.filename}`
       : existingNews.video;
+    console.log(req.files);
 
-    if (existingNews.video && req.files.video) {
+    if (existingNews.video && req.file) {
       const oldVideoPath = path.join(
         __dirname,
         "../public",
@@ -188,39 +188,53 @@ const deactivateNews = async (req, res) => {
 //----------------------------------------------------------------
 // File filter for validation
 const fileFilter = (req, file, cb) => {
+  // Check if the field name matches "video"
   if (file.fieldname === "video") {
+    // Check if the mimetype starts with "video/"
     if (file.mimetype.startsWith("video/")) {
-      cb(null, true);
+      cb(null, true); // Accept the file
     } else {
-      cb(new Error("Only video files are allowed!"), false);
+      cb(new Error("Only video files are allowed!"), false); // Reject non-video files
     }
   } else {
-    cb(new Error("Unsupported file type!"), false);
+    cb(new Error("Unsupported file field!"), false); // Reject other field names
   }
 };
 
-// Multer storage configuration (optional: customize destination/filename)
+// Multer storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "public/videos"); // Set the upload directory
+    // Set the upload directory
+    cb(null, "public/videos");
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, `${uniqueSuffix}-${file.originalname}`);
+    // Generate a unique filename
+    const uniqueName = `${Date.now()}-${Math.round(
+      Math.random() * 1e9
+    )}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
   },
 });
 
-// Multer configuration
+// Multer upload instance
 const upload = multer({
-  storage,
-  fileFilter,
+  storage, // Use the defined storage configuration
+  fileFilter, // Use the custom file filter
   limits: {
-    fileSize: 40 * 1024 * 1024, // 40MB max for videos
+    fileSize: 40 * 1024 * 1024, // Limit file size to 40MB
   },
 });
 
 // Middleware for handling video uploads
-const uploadVideo = upload.single("video"); // Allow only one video file
+const uploadVideo = (req, res, next) => {
+  upload.single("video")(req, res, (err) => {
+    if (err) {
+      // Handle upload errors
+      return res.status(400).json({ message: err.message });
+    }
+    next(); // Proceed to the next middleware
+  });
+};
 
 //----------------------------------------------------------------
 //----------------------------------------------------------------
