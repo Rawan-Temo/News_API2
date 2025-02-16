@@ -3,7 +3,7 @@ const APIFeatures = require("../utils/apiFeatures");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const Image = require("../models/image");
+const Media = require("../models/media");
 //----------------------------------------------------------------
 //----------------------------------------------------------------
 //----------------------------------------------------------------
@@ -34,24 +34,22 @@ const getAllNews = async (req, res) => {
       features.query, // Get paginated news results
       News.countDocuments(parsedQuery), // Count total matching documents
     ]);
-    // Fetch images for each news item
-    const newsWithImages = await Promise.all(
+    const newsWithMedia = await Promise.all(
       newsList.map(async (newsItem) => {
-        // Fetch images related to the current news item by newsId
-        const images = await Image.find({ newsId: newsItem._id });
-
-        // Add images to the news item
+        console.log(newsItem._id);
+        const media = await Media.find({ newsId: newsItem._id });
+        console.log(media);
         return {
           ...newsItem.toObject(),
-          images: images.map((image) => image.src), // Include only the src field for simplicity
+          media: media.map((media) => media.src), // Include only the src field for simplicity
         };
       })
     );
     res.status(200).json({
       status: "success",
-      results: newsWithImages.length, // Number of results in this response
+      results: newsWithMedia.length, // Number of results in this response
       totalNewsCount, // Total count of matching documents
-      data: newsWithImages, // The news data
+      data: newsWithMedia, // The news data
     });
   } catch (error) {
     res.status(400).json({ message: error.message });

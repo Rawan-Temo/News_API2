@@ -5,6 +5,11 @@ const mongooseFuzzySearching = require("mongoose-fuzzy-searching");
 
 const newsSchema = new mongoose.Schema(
   {
+    authorName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     title: {
       type: String,
       required: true,

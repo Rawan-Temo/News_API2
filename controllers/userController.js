@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt"); // For password hashing and validation
 const jwt = require("jsonwebtoken"); // For creating JWT tokens
 const UserVerification = require("../models/userVerification");
 const nodemailer = require("nodemailer");
+const APIFeatures = require("../utils/apiFeatures");
 // Controller for user login
 const login = async (req, res) => {
   try {
@@ -93,19 +94,16 @@ const getAllUsers = async (req, res) => {
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
     const parsedQuery = JSON.parse(queryStr);
+    const features = new APIFeatures(User.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
 
-    // Pagination, sorting, and limiting fields
-    const page = req.query.page || 1;
-    const limit = req.query.limit || 10;
-    const skip = (page - 1) * limit;
-
-    const users = await User.find(parsedQuery)
-      .skip(skip)
-      .limit(limit)
-      .sort(req.query.sort || "createdAt"); // You can sort by any field, default by creation date
-
-    const totalUsersCount = await User.countDocuments(parsedQuery);
-
+    const [users, totalUsersCount] = await Promise.all([
+      features.query, // Get paginated news results
+      User.countDocuments(parsedQuery), // Count total matching documents
+    ]);
     res.status(200).json({
       status: "success",
       results: users.length,

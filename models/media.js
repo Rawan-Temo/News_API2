@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const imageSchema = new mongoose.Schema(
+const mediaSchema = new mongoose.Schema(
   {
     newsId: {
       type: mongoose.Schema.Types.ObjectId, // References the News model
@@ -16,6 +16,6 @@ const imageSchema = new mongoose.Schema(
 ); // Add createdAt and updatedAt timestamps automatically
 
 // Export the model
-imageSchema.index({ newsId: 1, src: 1 });
-const Image = mongoose.model("Image", imageSchema);
-module.exports = Image;
+mediaSchema.index({ newsId: 1, src: 1 });
+const Media = mongoose.model("Media", mediaSchema);
+module.exports = Media;

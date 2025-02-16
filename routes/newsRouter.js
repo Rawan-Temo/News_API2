@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const newsController = require("../controllers/newsController");
-const imageController = require("../controllers/imageController");
+const mediaController = require("../controllers/imageController"); // Changed from imageController to mediaController
 const {
   authenticateToken,
   isAdmin,
@@ -12,26 +12,26 @@ router.route("/search").get(authenticateToken, isUser, newsController.search);
 
 //Media
 router
-  .route("/images")
-  .get(authenticateToken, isUser, imageController.allImages);
+  .route("/media") // Changed from "/images" to "/media"
+  .get(authenticateToken, isUser, mediaController.allMedia); // Changed from imageController.allImages to mediaController.allMedia
 router
-  .route("/images")
-  .delete(authenticateToken, isAdmin, imageController.deleteImages);
+  .route("/media") // Changed from "/images" to "/media"
+  .delete(authenticateToken, isAdmin, mediaController.deleteMedia); // Changed from imageController.deleteImages to mediaController.deleteMedia
 router
-  .route("/images/:id")
+  .route("/media/:id") // Changed from "/images/:id" to "/media/:id"
   .patch(
     authenticateToken,
     isAdmin,
-    imageController.uploadImages,
-    imageController.updateImage
+    mediaController.uploadMedia, // Changed from imageController.uploadImages to mediaController.uploadMedia
+    mediaController.updateMedia // Changed from imageController.updateImage to mediaController.updateMedia
   );
 router
   .route("/handleMedia")
   .post(
     authenticateToken,
     isAdmin,
-    imageController.uploadImages,
-    imageController.handleImages
+    mediaController.uploadMedia, // Changed from imageController.uploadImages to mediaController.uploadMedia
+    mediaController.handleMedia // Changed from imageController.handleImages to mediaController.handleMedia
   ); // POST /api/handleMedia
 //Media
 

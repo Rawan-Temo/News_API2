@@ -11,6 +11,7 @@ const path = require("path");
 const categoryRouter = require("./routes/categoryRouter");
 const newsRouter = require("./routes/newsRouter");
 const userRouter = require("./routes/userRouter");
+const commentsRouter = require("./routes/commentsRouter");
 
 //INFORMATION ROUTES
 
@@ -29,6 +30,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/api/categories", categoryRouter);
 app.use("/api/News", newsRouter);
 app.use("/api/Users", userRouter);
+app.use("/api/Comments", commentsRouter);
 // API Routes Ends
 // 404 Handler
 app.use((req, res, next) => {
