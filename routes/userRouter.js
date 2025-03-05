@@ -19,10 +19,10 @@ router
 router
   .route("/")
   .get(authenticateToken, isAdmin, userController.getAllUsers) //api/users/
-  .post( userController.createUser); //api/users/
+  .post(authenticateToken, isAdmin, userController.createUser); //api/users/
 
 router
   .route("/:id")
-  .get(authenticateToken, isAdmin,userController.getAUser) //api/users/:id
+  .get(authenticateToken, isAdmin, userController.getAUser) //api/users/:id
   .delete(authenticateToken, isAdmin, userController.deleteAUser); //api/users/:id
 module.exports = router;

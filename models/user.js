@@ -1,4 +1,3 @@
-const { request } = require("express");
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
@@ -7,7 +6,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      unique: true, // Assuming email should be unique
+      unique: true, // user should be unique
       lowercase: true,
     },
     email: {
