@@ -23,6 +23,6 @@ router
 
 router
   .route("/:id")
-  .get(authenticateToken, isAdmin, userController.getAUser) //api/users/:id
+  .get(authenticateToken, isAdmin,userController.getAUser) //api/users/:id
   .delete(authenticateToken, isAdmin, userController.deleteAUser); //api/users/:id
 module.exports = router;

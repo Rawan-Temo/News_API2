@@ -14,6 +14,10 @@ const userVerificationSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  expiresAt: {
+    type: Date,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("UserVerification", userVerificationSchema);

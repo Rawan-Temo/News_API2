@@ -169,7 +169,6 @@ const signUp = async (req, res) => {
       email,
       password: hashedPassword,
       phone,
-      role,
     });
 
     // Generate a six-digit verification code
@@ -177,10 +176,14 @@ const signUp = async (req, res) => {
       100000 + Math.random() * 900000
     ).toString();
 
+    // Set expiration time to 20 minutes from now
+    const expiresAt = new Date(Date.now() + 20 * 60 * 1000);
+
     // Save verification details
     await UserVerification.create({
       userId: user._id,
       verificationCode,
+      expiresAt,
     });
 
     res.status(201).json({
@@ -369,7 +372,7 @@ const verify = async (req, res) => {
 
   // Validate input
   if (!verificationCode) {
-    return res.status(400).json({ message: " verification code is required." });
+    return res.status(400).json({ message: "Verification code is required." });
   }
 
   try {
@@ -380,7 +383,14 @@ const verify = async (req, res) => {
 
     // Check if the record exists
     if (!verificationRecord) {
-      return res.status(404).json({ message: "Invalid verification code" });
+      return res.status(404).json({ message: "Invalid verification code." });
+    }
+
+    // Check if the verification code has expired
+    if (verificationRecord.expiresAt < new Date()) {
+      return res
+        .status(400)
+        .json({ message: "Verification code has expired." });
     }
 
     // Check if the user is already verified
@@ -391,9 +401,12 @@ const verify = async (req, res) => {
     // Mark as verified
     verificationRecord.active = true;
     await verificationRecord.save();
+
     const verifyUser = await User.findById(verificationRecord.userId);
     verifyUser.isVerified = true;
     await verifyUser.save();
+    console.log(verificationRecord);
+    await UserVerification.findByIdAndDelete({ _id: verificationRecord._id });
 
     res.status(200).json({ message: "User successfully verified." });
   } catch (err) {
