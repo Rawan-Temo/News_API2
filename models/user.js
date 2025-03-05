@@ -7,6 +7,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      unique: true, // Assuming email should be unique
+      lowercase: true,
     },
     email: {
       type: String,
@@ -27,7 +29,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: ["admin", "user"], // Assuming phone is a required field
-      default:"user"
+      default: "user",
     },
     isVerified: {
       type: Boolean,
