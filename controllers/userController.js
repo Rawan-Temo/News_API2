@@ -158,11 +158,38 @@ const deleteAUser = async (req, res) => {
 //sign Up0
 const signUp = async (req, res) => {
   try {
-    const { username, email, password, phone, role } = req.body;
+    const { username, email, password, phone } = req.body;
 
     // Hash the password before saving it
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Function to generate a unique verification code
+    const generateUniqueVerificationCode = async () => {
+      let verificationCode;
+      let isUnique = false;
+      let counter = 0;
+
+      while (!isUnique) {
+        verificationCode = Math.floor(
+          100000 + Math.random() * 900000
+        ).toString();
+        const existingRecord = await UserVerification.findOne({
+          verificationCode,
+        });
+        if (!existingRecord) {
+          isUnique = true;
+        }
+        counter++;
+        if (counter > 2) {
+          throw new Error("Failed to generate unique verification code.");
+        }
+      }
+
+      return verificationCode;
+    };
+
+    // Generate a unique verification code
+    const verificationCode = await generateUniqueVerificationCode();
     // Create the user in the database with the hashed password
     const user = await User.create({
       username,
@@ -170,21 +197,18 @@ const signUp = async (req, res) => {
       password: hashedPassword,
       phone,
     });
-
-    // Generate a six-digit verification code
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
-
-    // Set expiration time to 20 minutes from now
-    const expiresAt = new Date(Date.now() + 20 * 60 * 1000);
-
-    // Save verification details
-    await UserVerification.create({
-      userId: user._id,
-      verificationCode,
-      expiresAt,
-    });
+    try {
+      // Save verification details
+      await UserVerification.create({
+        userId: user._id,
+        verificationCode,
+      });
+    } catch (err) {
+      console.error("Error saving verification details:", err);
+      return res
+        .status(500)
+        .json({ message: "Failed to save verification details." });
+    }
 
     res.status(201).json({
       message: "User created successfully. Please verify your email.",
@@ -384,13 +408,6 @@ const verify = async (req, res) => {
     // Check if the record exists
     if (!verificationRecord) {
       return res.status(404).json({ message: "Invalid verification code." });
-    }
-
-    // Check if the verification code has expired
-    if (verificationRecord.expiresAt < new Date()) {
-      return res
-        .status(400)
-        .json({ message: "Verification code has expired." });
     }
 
     // Check if the user is already verified

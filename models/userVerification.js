@@ -8,15 +8,12 @@ const userVerificationSchema = new mongoose.Schema({
   },
   verificationCode: {
     type: String,
+    unique: true,
     required: true,
   },
   active: {
     type: Boolean,
     default: false,
-  },
-  expiresAt: {
-    type: Date,
-    required: true,
   },
 });
 
